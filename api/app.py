@@ -3,7 +3,7 @@ import os
 from github import Github
 from langchain.llms import OpenAI
 from flask import Flask, request, render_template, session, redirect, url_for
-from constants import SECRET_KEY, FILE_EXTENSIONS, GITHUB_TOKEN, OPEN_AI_API_KEY
+from .constants import SECRET_KEY, FILE_EXTENSIONS, GITHUB_TOKEN, OPEN_AI_API_KEY
 
 
 app = Flask(__name__)
