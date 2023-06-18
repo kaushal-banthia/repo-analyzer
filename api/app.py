@@ -44,7 +44,7 @@ def get_answer_from_gpt(prompt, tokens=5):
     return answer
 
 def preprocess(file_content):
-    # break the file into chunks of 4000 words
+    # break the file into chunks of 3500 toekens
     if file_content.encoding == 'base64':
         text = file_content.decoded_content.decode('latin-1')
     else:
@@ -53,7 +53,7 @@ def preprocess(file_content):
     chunks = []
     chunk = ""
     for word in text.split():
-        if num_tokens(chunk) < 4000:
+        if num_tokens(chunk) < 3500:
             chunk += word + " "
         else:
             chunks.append(chunk)
@@ -87,7 +87,7 @@ def get_files_from_repo(repo, explanation = 0):
                         text = file_content.decoded_content.decode('latin-1')
                     else:
                         text = file_content.content
-                    if num_tokens(text) < 4000:
+                    if num_tokens(text) < 3500:
                         # save the file
                         prompt = "Assign a technical complexity score to the following code on a scale of 1 to 10 and reply with nothing else. You do not have to put in any corrections fo the code. Just reply with a number only. Make sure to keep the answer only numeric:\n " + text + "\n Score: "
                         score += float(get_answer_from_gpt(prompt))
@@ -119,7 +119,7 @@ def fetch_repos():
     global repositories
     github_url = session.get('github_url')
     repositories = fetch_user_repositories(github_url)
-    repositories = repositories[:2]
+    repositories = repositories[:5]
     return redirect(url_for('calculate'))
 
 @app.route('/calculate')    
@@ -194,6 +194,10 @@ def explain():
     message = message1 + "\n\n" + message2
 
     return render_template('button.html', message=message, text="Go to home page")
+
+@app.route('/explain', methods=['POST'])
+def explain_post():
+    return redirect(url_for('execute'))
 
 if __name__ == '__main__':
     app.run(debug=True)
