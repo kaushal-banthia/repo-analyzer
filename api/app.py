@@ -119,7 +119,6 @@ def fetch_repos():
     global repositories
     github_url = session.get('github_url')
     repositories = fetch_user_repositories(github_url)
-    repositories = repositories[:5]
     return redirect(url_for('calculate'))
 
 @app.route('/calculate')    
