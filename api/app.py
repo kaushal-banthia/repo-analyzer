@@ -3,7 +3,8 @@ import os
 from github import Github
 from langchain.llms import OpenAI
 from flask import Flask, request, render_template, session, redirect, url_for
-from .constants import SECRET_KEY, FILE_EXTENSIONS, GITHUB_TOKEN, OPEN_AI_API_KEY
+from constants import SECRET_KEY, FILE_EXTENSIONS, GITHUB_TOKEN, OPEN_AI_API_KEY
+import tiktoken
 
 
 app = Flask(__name__)
@@ -14,6 +15,12 @@ g = Github(GITHUB_TOKEN)
 
 repositories = []
 responses = {}
+
+def num_tokens(string, encoding_name = "gpt2"):
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 # Fetch a user's repositories from GitHub
 def fetch_user_repositories(github_url):
@@ -46,7 +53,7 @@ def preprocess(file_content):
     chunks = []
     chunk = ""
     for word in text.split():
-        if len(chunk.split()) < 4000:
+        if num_tokens(chunk) < 4000:
             chunk += word + " "
         else:
             chunks.append(chunk)
@@ -80,7 +87,7 @@ def get_files_from_repo(repo, explanation = 0):
                         text = file_content.decoded_content.decode('latin-1')
                     else:
                         text = file_content.content
-                    if len(text.split()) < 4000:
+                    if num_tokens(text) < 4000:
                         # save the file
                         prompt = "Assign a technical complexity score to the following code on a scale of 1 to 10 and reply with nothing else. You do not have to put in any corrections fo the code. Just reply with a number only. Make sure to keep the answer only numeric:\n " + text + "\n Score: "
                         score += float(get_answer_from_gpt(prompt))
@@ -112,7 +119,7 @@ def fetch_repos():
     global repositories
     github_url = session.get('github_url')
     repositories = fetch_user_repositories(github_url)
-    repositories = repositories[:3]
+    repositories = repositories[:2]
     return redirect(url_for('calculate'))
 
 @app.route('/calculate')    
@@ -187,3 +194,6 @@ def explain():
     message = message1 + "\n\n" + message2
 
     return render_template('button.html', message=message, text="Go to home page")
+
+if __name__ == '__main__':
+    app.run(debug=True)
